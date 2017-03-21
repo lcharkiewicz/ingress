@@ -214,7 +214,9 @@ func buildLocation(input interface{}) string {
 		return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
 	}
 
-	return path
+	baseuri := `/(?<baseuri>.*)`
+	return fmt.Sprintf(`~* ^%s%s`, path, baseuri)
+	//return path
 }
 
 func buildAuthLocation(input interface{}) string {
@@ -266,7 +268,7 @@ func buildProxyPass(b interface{}, loc interface{}) string {
 	}
 
 	// defProxyPass returns the default proxy_pass, just the name of the upstream
-	defProxyPass := fmt.Sprintf("proxy_pass %s://%s;", proto, location.Backend)
+	defProxyPass := fmt.Sprintf("proxy_pass %s://%s$baseuri;", proto, location.Backend)
 	// if the path in the ingress rule is equals to the target: no special rewrite
 	if path == location.Redirect.Target {
 		return defProxyPass
@@ -292,13 +294,13 @@ func buildProxyPass(b interface{}, loc interface{}) string {
 			return fmt.Sprintf(`
 	rewrite %s(.*) /$1 break;
 	rewrite %s / break;
-	proxy_pass %s://%s;
+	proxy_pass %s://%s$baseuri;
 	%v`, path, location.Path, proto, location.Backend, abu)
 		}
 
 		return fmt.Sprintf(`
 	rewrite %s(.*) %s/$1 break;
-	proxy_pass %s://%s;
+	proxy_pass %s://%s$baseuri;
 	%v`, path, location.Redirect.Target, proto, location.Backend, abu)
 	}
 
